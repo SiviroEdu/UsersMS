@@ -7,9 +7,9 @@ Tortoise.init_models(
     ["app.models"], "models"
 )
 
-UserSchema = pydantic_model_creator(User, name="ClientSchema")
+UserSchema = pydantic_model_creator(User, name="UserSchema")
 UserCreate = pydantic_model_creator(
     User,
-    name="ClientCreate",
+    name="UserCreate",
     exclude_readonly=True,
 )
