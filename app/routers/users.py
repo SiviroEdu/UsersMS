@@ -116,7 +116,8 @@ async def levelup(
 async def get_me(
         user: Annotated[UserSchema, Depends(get_current_user)]
 ) -> UserMeResponse:
+    print(user.__dict__)
     return UserMeResponse(
-        next_level_coins=calc_level_up_coins(user.level),
+        next_level_coins=calc_level_up_coins(user.level+1),
         **user.model_dump()
     )

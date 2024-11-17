@@ -44,7 +44,7 @@ TORTOISE_ORM = {
 # noinspection PyTypeChecker
 application.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*", "http://localhost:5432"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
