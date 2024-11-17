@@ -3,5 +3,6 @@ fastapi
 pydantic
 uvicorn
 aerich
+pydantic-partial
 
 git+https://github.com/HexChap/MSCore#egg=ms_core

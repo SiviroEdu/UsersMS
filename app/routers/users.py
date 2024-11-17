@@ -2,10 +2,9 @@ import math
 from typing import Annotated, Literal
 
 from fastapi import Path, HTTPException, APIRouter, BackgroundTasks
-from fastapi.params import Query, Depends
-from ms_core import BaseCRUDRouter
+from fastapi.params import Query, Depends, Body
 
-from app import UserCRUD, UserCreate, UserSchema, User, UserMeResponse
+from app import UserCRUD, UserSchema, User, UserMeResponse, UserUpdate
 from app.bridges.dependencies import get_current_user
 from app.dependencies import confirm_inner
 
@@ -22,6 +21,31 @@ async def get_by_pupil_id(id_: int = Path()) -> UserSchema | None:
 @router.get("/username/{username}")
 async def get_by_username(username: str = Path()) -> UserSchema | None:
     return await UserCRUD.get_by(shkolo_username=username)
+
+
+@router.put("/@me")
+async def update(
+        user: Annotated[UserSchema, Depends(get_current_user)],
+        payload: UserUpdate = Body()
+) -> UserSchema | None:
+    if user.type == 1:
+        prohibited = {"shkolo_username"}
+    else:
+        prohibited = {
+            "shkolo_username", "created_at", "id", "coins", "bulbs",
+            "level", "type", "pupil_id"
+        }
+
+    keys = set(payload.model_dump(exclude_none=True, exclude_defaults=True).keys())
+
+    if keys.intersection(prohibited):
+        print(keys)
+        raise HTTPException(
+            status_code=403,
+            detail="Editing this field is forbidden."
+        )
+
+    return await UserCRUD.update_by(payload, id=user.id)
 
 
 @router.post("/{item_id}/{currency}/add", tags=["currency"])
