@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn as uvicorn
@@ -5,11 +6,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from ms_core import setup_app
 
+from app import settings
 from app.settings import db_url
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+    await settings.session.close()
+
 
 application = FastAPI(
     title="UserMS",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 model_paths = ["app.models", "aerich.models"]
@@ -39,6 +49,3 @@ application.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-if __name__ == "__main__":
-    uvicorn.run("main:application", port=8001, reload=True)
