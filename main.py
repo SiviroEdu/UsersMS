@@ -12,12 +12,24 @@ application = FastAPI(
     version="0.1.0"
 )
 
+model_paths = ["app.models", "aerich.models"]
+
 setup_app(
     application,
     db_url,
     Path("app") / "routers",
-    ["app.models"]
+    model_paths
 )
+
+TORTOISE_ORM = {
+    "connections": {"default": db_url},
+    "apps": {
+        "models": {
+            "models": model_paths,
+            "default_connection": "default",
+        },
+    },
+}
 
 # noinspection PyTypeChecker
 application.add_middleware(
@@ -29,4 +41,4 @@ application.add_middleware(
 )
 
 if __name__ == "__main__":
-    uvicorn.run("main:application", port=8000, reload=True)
+    uvicorn.run("main:application", port=8001, reload=True)

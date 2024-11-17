@@ -1,5 +1,13 @@
+import enum
+from email.policy import default
+
 from ms_core import AbstractModel
 from tortoise import fields
+
+
+class UserType(enum.IntEnum):
+    PUPIL = 0
+    ADMIN = 1
 
 
 class User(AbstractModel):
@@ -7,6 +15,7 @@ class User(AbstractModel):
     shkolo_name = fields.CharField(256, null=True)
     coins = fields.IntField(default=0)
     bulbs = fields.IntField(default=0)
+    type = fields.IntEnumField(UserType, default=0)
 
     pupil_id = fields.BigIntField()
 
