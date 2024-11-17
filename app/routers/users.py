@@ -1,17 +1,15 @@
-from typing import Annotated, LiteralString, Literal
+import math
+from typing import Annotated, Literal
 
-from fastapi import Path, HTTPException, status
+from fastapi import Path, HTTPException, APIRouter, BackgroundTasks
 from fastapi.params import Query, Depends
 from ms_core import BaseCRUDRouter
 
-from app import UserCRUD, UserCreate, UserSchema, User
+from app import UserCRUD, UserCreate, UserSchema, User, UserMeResponse
 from app.bridges.dependencies import get_current_user
 from app.dependencies import confirm_inner
 
-router = BaseCRUDRouter[UserSchema, UserCreate](
-    crud=UserCRUD,
-    schema=UserSchema,
-    schema_create=UserCreate,
+router = APIRouter(
     prefix="/users",
     tags=["users"]
 )
@@ -52,3 +50,49 @@ async def inc_currency(
     await user.update_from_dict({currency: summed}).save()
 
     return summed
+
+
+def calc_level_up_coins(current_level: int) -> int:
+    """Calculates experience points needed to level up.
+
+    Args:
+        `current_level` (`int`): Current level.
+
+    Returns:
+        `int`: Experience points needed to level up.
+    """
+    return int((current_level - 1) * 83 + math.sqrt(current_level * 10) * 83)
+
+
+async def levelup_user(user: UserSchema, price: int):
+    await (user_ := await User.get(id=user.id)).update_from_dict(
+        {"level": user_.level + 1, "coins": user.coins - price}
+    ).save()
+
+@router.get("/@me/levelup", summary="Levelup and response next_level_coins")
+async def levelup(
+        user: Annotated[UserSchema, Depends(get_current_user)],
+        background_tasks: BackgroundTasks
+):
+    if user.coins < (price := calc_level_up_coins(user.level)):
+        raise HTTPException(
+            status_code=400,
+            detail=dict(
+                message="Not enough coins.",
+                next_level_coins=price
+            )
+        )
+
+    background_tasks.add_task(levelup_user, user, price)
+
+    return {"next_level_coins": calc_level_up_coins(user.level+1)}
+
+
+@router.get("/@me")
+async def get_me(
+        user: Annotated[UserSchema, Depends(get_current_user)]
+) -> UserMeResponse:
+    return UserMeResponse(
+        next_level_coins=calc_level_up_coins(user.level),
+        **user.model_dump()
+    )

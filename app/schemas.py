@@ -13,3 +13,7 @@ UserCreate = pydantic_model_creator(
     name="UserCreate",
     exclude_readonly=True,
 )
+
+
+class UserMeResponse(UserSchema):
+    next_level_coins: int

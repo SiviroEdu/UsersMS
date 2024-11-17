@@ -15,6 +15,7 @@ class User(AbstractModel):
     shkolo_name = fields.CharField(256, null=True)
     coins = fields.IntField(default=0)
     bulbs = fields.IntField(default=0)
+    level = fields.IntField(default=1)
     type = fields.IntEnumField(UserType, default=0)
 
     pupil_id = fields.BigIntField()
